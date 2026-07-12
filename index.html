@@ -1,0 +1,888 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="title">CoolAir Europe | Climatiseurs Mobiles Split Sans Perçage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        .hero-bg {
+            background: linear-gradient(rgba(0,0,0,0.45),rgba(0,0,0,0.55)), url('images/主图_02.JPEG');
+            background-size: cover; background-position: center;
+        }
+        .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+        .product-card:active { transform: translateY(-2px); }
+        .energy-label-eu {
+            background-color: #008d4c; color: white; padding: 2px 8px;
+            border-radius: 3px 0 0 3px; font-size: 11px; font-weight: bold; position: relative;
+        }
+        .energy-label-eu::after {
+            content: ''; position: absolute; right: -8px; top: 0;
+            width: 0; height: 0; border-top: 9px solid transparent;
+            border-bottom: 9px solid transparent; border-left: 8px solid #008d4c;
+        }
+        .mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+        .mobile-menu.open { max-height: 350px; }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            z-index: 100; align-items: center; justify-content: center;
+            padding: 1rem; backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; border-radius: 1.25rem; max-width: 600px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 1.5rem 1.75rem;
+            position: relative; animation: modalIn 0.25s ease;
+            -webkit-overflow-scrolling: touch;
+        }
+        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-close {
+            position: absolute; top: 0.75rem; right: 0.75rem; width: 36px; height: 36px;
+            background: #f3f4f6; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; font-size: 1.25rem; color: #6b7280;
+            border: none; transition: background 0.2s;
+        }
+        .modal-close:hover { background: #e5e7eb; }
+        .cart-sidebar {
+            position: fixed; right: -100%; top: 0; width: 100%; max-width: 420px;
+            height: 100vh; background: white; z-index: 200;
+            transition: right 0.3s ease; box-shadow: -5px 0 30px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column;
+        }
+        .cart-sidebar.open { right: 0; }
+        .cart-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 199; }
+        .cart-overlay.active { display: block; }
+        .step-indicator { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #e5e7eb; transition: background 0.3s; }
+        .step-dot.active { background: #3b82f6; }
+        .step-dot.done { background: #10b981; }
+        .checkout-step { display: none; animation: fadeIn 0.25s ease; }
+        .checkout-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .detail-tab {
+            cursor: pointer; padding: 0.65rem 1rem; border-bottom: 3px solid transparent;
+            font-weight: 600; transition: all 0.2s; color: #6b7280; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .detail-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .detail-panel { display: none; animation: fadeIn 0.2s ease; }
+        .detail-panel.active { display: block; }
+        .stars { color: #f59e0b; letter-spacing: 2px; }
+        .cart-item { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6; }
+        .cart-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #d1d5db;
+            background: white; display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.875rem; transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .qty-btn:active { background: #f3f4f6; }
+        .toast {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 12px;
+            font-weight: 600; z-index: 300; opacity: 0; transition: all 0.35s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .form-input {
+            width: 100%; padding: 0.7rem 0.85rem; border: 1.5px solid #d1d5db;
+            border-radius: 10px; font-size: 0.95rem; transition: border-color 0.2s;
+            background: white; -webkit-appearance: none;
+        }
+        .form-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        @media (max-width: 768px) {
+            .modal-content { padding: 1.1rem 1.25rem; border-radius: 1rem; max-height: 85vh; }
+            .cart-sidebar { max-width: 100%; }
+            .product-card .btn-action { padding: 0.7rem 1rem; font-size: 1rem; }
+            .hero-bg { min-height: 420px; }
+            .detail-tab { font-size: 0.85rem; padding: 0.5rem 0.65rem; }
+            .cart-item img { width: 52px; height: 52px; }
+        }
+        @media (max-width: 480px) {
+            .modal-content { padding: 1rem; border-radius: 0.75rem; }
+        }
+        button, a, .qty-btn, .modal-close, .detail-tab, .product-card { cursor: pointer; }
+        @media (hover: none) {
+            .product-card:hover { transform: none; box-shadow: none; }
+        }
+        .modal-content::-webkit-scrollbar, .cart-sidebar::-webkit-scrollbar { width: 5px; }
+        .modal-content::-webkit-scrollbar-thumb, .cart-sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .lang-btn { cursor: pointer; transition: color 0.2s; }
+        .lang-btn.active { color: #2563eb; font-weight: 700; }
+        .stripe-btn {
+            background: #6772e5; color: white; padding: 0.75rem 1.5rem; border-radius: 12px;
+            font-weight: 700; border: none; width: 100%; transition: background 0.2s;
+        }
+        .stripe-btn:hover { background: #5469d4; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+<div id="toast" class="toast"></div>
+
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center py-2 text-xs md:text-sm text-gray-600 border-b border-gray-100">
+            <div class="hidden md:flex items-center gap-2 text-green-600">
+                <i class="fas fa-leaf"></i>
+                <span data-i18n="ecoBadge">Réfrigérant Éco R290 & Conforme CE</span>
+            </div>
+            <div class="flex items-center gap-4 ml-auto">
+                <div class="flex items-center gap-2">
+                    <span class="lang-btn active" data-lang="fr" onclick="switchLanguage('fr')">🇫🇷 FR</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="lang-btn" data-lang="es" onclick="switchLanguage('es')">🇪🇸 ES</span>
+                </div>
+                <div class="font-semibold text-gray-800">€ EUR</div>
+            </div>
+        </div>
+        <div class="flex justify-between items-center py-3 md:py-4">
+            <a href="#" class="flex items-center gap-2 no-underline">
+                <i class="fas fa-snowflake text-blue-500 text-2xl md:text-3xl"></i>
+                <span class="text-xl md:text-2xl font-black tracking-tight text-gray-900">CoolAir<span class="text-blue-500">.eu</span></span>
+            </a>
+            <div class="hidden md:flex gap-8 font-medium">
+                <a href="#" class="text-blue-600 hover:text-blue-700" data-i18n="navHome">Accueil</a>
+                <a href="#products" class="text-gray-700 hover:text-blue-500" data-i18n="navProducts">Nos Climatiseurs</a>
+                <a href="#accessories" class="text-gray-700 hover:text-blue-500" data-i18n="navAccessories">Accessoires</a>
+                <a href="#faq" class="text-gray-700 hover:text-blue-500" data-i18n="navFaq">Aide/FAQ</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="md:hidden text-gray-700 text-xl p-1" id="menuToggle" aria-label="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="relative text-gray-700 hover:text-blue-500 text-xl" id="cartButton" aria-label="Panier">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" id="cartCount">0</span>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu md:hidden" id="mobileMenu">
+            <div class="flex flex-col gap-1 pb-4 pt-1 border-t border-gray-100">
+                <a href="#" class="text-blue-600 font-semibold py-2 px-1" data-i18n="navHome">Accueil</a>
+                <a href="#products" class="text-gray-700 py-2 px-1 hover:text-blue-500" onclick="closeMobileMenu()" data-i18n="navProducts">Nos Climatiseurs</a>
+                <a href="#accessories" class="text-gray-700 py-2 px-1 hover:text-blue-500" onclick="closeMobileMenu()" data-i18n="navAccessories">Accessoires</a>
+                <a href="#faq" class="text-gray-700 py-2 px-1 hover:text-blue-500" onclick="closeMobileMenu()" data-i18n="navFaq">Aide/FAQ</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Hero -->
+<section class="hero-bg min-h-[420px] md:h-[500px] flex items-center text-white">
+    <div class="container mx-auto px-4 text-center md:text-left md:max-w-2xl py-12 md:py-0">
+        <span class="bg-blue-500/90 text-white text-xs md:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4 inline-block" data-i18n="heroBadge">
+            Innovation 2026 : Spécial Locataire & Copropriété
+        </span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-black leading-tight mb-3 md:mb-4">
+            <span data-i18n="heroTitle1">Le Frais Partout,</span> <span class="text-blue-400" data-i18n="heroTitle2">Sans Aucun Perçage</span>
+        </h1>
+        <p class="text-base md:text-lg lg:text-xl mb-6 md:mb-8 text-gray-200 max-w-xl" data-i18n="heroSub">
+            Climatiseur mobile split haute performance. Idéal pour les appartements en France et en Espagne.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+            <a href="#products" class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-8 py-3.5 rounded-xl text-base md:text-lg font-bold transition text-center shadow-lg shadow-blue-500/30" data-i18n="heroCta1">
+                Découvrir l'Offre
+            </a>
+            <a href="#accessories" class="bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm text-white border border-white/30 px-6 py-3.5 rounded-xl text-base md:text-lg font-medium transition text-center" data-i18n="heroCta2">
+                Voir les Accessoires
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-10 md:py-12 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+            <div class="p-5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-blue-500 text-xl flex-shrink-0"><i class="fas fa-tools"></i></div>
+                <div><h3 class="font-bold mb-1 text-gray-900" data-i18n="feat1Title">Zéro Frais d'Installation</h3><p class="text-gray-600 text-sm" data-i18n="feat1Desc">Économisez jusqu'à 1500€ d'artisan. Installez-le vous-même en 5 minutes.</p></div>
+            </div>
+            <div class="p-5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-4">
+                <div class="bg-green-50 p-3 rounded-lg text-green-500 text-xl flex-shrink-0"><i class="fas fa-euro-sign"></i></div>
+                <div><h3 class="font-bold mb-1 text-gray-900" data-i18n="feat2Title">Éco-Responsable</h3><p class="text-gray-600 text-sm" data-i18n="feat2Desc">Classe A++ avec fluide naturel R290. Fraîcheur intense pour centimes par nuit.</p></div>
+            </div>
+            <div class="p-5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-4 sm:col-span-2 md:col-span-1 sm:justify-self-center md:justify-self-auto">
+                <div class="bg-purple-50 p-3 rounded-lg text-purple-500 text-xl flex-shrink-0"><i class="fas fa-home"></i></div>
+                <div><h3 class="font-bold mb-1 text-gray-900" data-i18n="feat3Title">Garantie Européenne 2 Ans</h3><p class="text-gray-600 text-sm" data-i18n="feat3Desc">Achat 100% sécurisé. Service client multilingue.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products -->
+<section id="products" class="py-12 md:py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center max-w-xl mx-auto mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2" data-i18n="productsTitle">Choisissez Votre Modèle</h2>
+            <p class="text-gray-600 text-sm md:text-base" data-i18n="productsSub">Livraison suivie avec nos partenaires logistiques certifiés.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 max-w-5xl mx-auto" id="productGrid"></div>
+    </div>
+</section>
+
+<!-- Accessories -->
+<section id="accessories" class="py-12 md:py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center max-w-xl mx-auto mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2" data-i18n="accTitle">Accessoires Essentiels</h2>
+            <p class="text-gray-600 text-sm md:text-base" data-i18n="accSub">Optimisez votre expérience de fraîcheur</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-8 max-w-3xl mx-auto" id="accessoryGrid"></div>
+    </div>
+</section>
+
+<!-- Certifications -->
+<section class="py-12 md:py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8 md:mb-10">
+                <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2" data-i18n="certTitle">Nos Certifications & Garanties</h2>
+                <p class="text-gray-600 text-sm md:text-base" data-i18n="certSub">Qualité européenne certifiée pour votre tranquillité</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-white p-5 rounded-xl border border-gray-100 text-center">
+                    <div class="text-3xl text-blue-500 mb-2"><i class="fas fa-check-circle"></i></div>
+                    <h4 class="font-bold text-gray-900 text-sm" data-i18n="cert1">Certifié CE</h4>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="cert1Desc">Normes sécurité UE</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 text-center">
+                    <div class="text-3xl text-green-500 mb-2"><i class="fas fa-leaf"></i></div>
+                    <h4 class="font-bold text-gray-900 text-sm" data-i18n="cert2">RoHS</h4>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="cert2Desc">Sans substances nocives</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 text-center">
+                    <div class="text-3xl text-purple-500 mb-2"><i class="fas fa-shield-alt"></i></div>
+                    <h4 class="font-bold text-gray-900 text-sm" data-i18n="cert3">Garantie 2 Ans</h4>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="cert3Desc">Pièces & main d'œuvre</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 text-center">
+                    <div class="text-3xl text-amber-500 mb-2"><i class="fas fa-truck"></i></div>
+                    <h4 class="font-bold text-gray-900 text-sm" data-i18n="cert4">Livraison 48H</h4>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="cert4Desc">France & Espagne</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-12 md:py-16 bg-white">
+    <div class="container mx-auto px-4 max-w-3xl">
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-8 text-center" data-i18n="faqTitle">Questions Fréquentes</h2>
+        <div class="space-y-3" id="faqContainer"></div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-gray-400 py-8 md:py-10">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-snowflake text-blue-400 text-xl"></i>
+                <span class="text-white text-lg font-black">CoolAir<span class="text-blue-400">.eu</span></span>
+            </div>
+            <div class="flex gap-5 text-sm">
+                <a href="#" class="hover:text-white transition" data-i18n="footerCgv">CGV</a>
+                <a href="#" class="hover:text-white transition" data-i18n="footerPrivacy">Confidentialité</a>
+                <a href="#" class="hover:text-white transition" data-i18n="footerContact">Contact</a>
+                <a href="#" class="hover:text-white transition" data-i18n="footerLegal">Mentions Légales</a>
+            </div>
+            <div class="text-sm">© 2026 CoolAir Europe</div>
+        </div>
+    </div>
+</footer>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeProductModal()">✕</button>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<!-- Cart Overlay -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+<!-- Cart Sidebar -->
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="flex items-center justify-between p-4 border-b border-gray-100">
+        <h3 class="text-lg font-black text-gray-900" data-i18n="cartTitle">Votre Panier</h3>
+        <button class="text-gray-400 hover:text-gray-600 text-xl" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4" id="cartItems">
+        <p class="text-gray-500 text-center mt-8" id="emptyCartText" data-i18n="cartEmpty">Votre panier est vide</p>
+    </div>
+    <div class="border-t border-gray-100 p-4 space-y-3" id="cartFooter" style="display:none">
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-600" data-i18n="cartSubtotal">Sous-total</span>
+            <span class="font-semibold text-gray-900" id="cartSubtotal">€0</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-600" data-i18n="cartShipping">Livraison</span>
+            <span class="text-green-600 font-medium" data-i18n="cartFree">Gratuite</span>
+        </div>
+        <div class="flex justify-between items-center text-base font-black text-gray-900 pt-1">
+            <span data-i18n="cartTotal">Total</span>
+            <span id="cartTotal">€0</span>
+        </div>
+        <button onclick="startCheckout()" class="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-base transition shadow-lg shadow-blue-500/30" data-i18n="cartCheckout">
+            Commander
+        </button>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+    <div class="modal-content" style="max-width: 520px;">
+        <button class="modal-close" onclick="closeCheckout()">✕</button>
+        <h3 class="text-xl font-black text-gray-900 mb-1" data-i18n="checkoutTitle">Finaliser la commande</h3>
+        <p class="text-sm text-gray-500 mb-4" data-i18n="checkoutSecure">Paiement 100% sécurisé</p>
+        <div class="step-indicator">
+            <div class="step-dot active" id="step1Dot"></div>
+            <div class="step-dot" id="step2Dot"></div>
+            <div class="step-dot" id="step3Dot"></div>
+        </div>
+        <div class="checkout-step active" id="checkoutStep1">
+            <h4 class="font-bold text-gray-900 mb-3" data-i18n="checkoutStep1Title">Adresse de livraison</h4>
+            <div class="space-y-3">
+                <input type="text" class="form-input" placeholder="Prénom & Nom" id="checkoutName" data-i18n-placeholder="checkoutNamePlaceholder">
+                <input type="text" class="form-input" placeholder="Adresse" id="checkoutAddress" data-i18n-placeholder="checkoutAddressPlaceholder">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" class="form-input" placeholder="Code Postal" id="checkoutZip" data-i18n-placeholder="checkoutZipPlaceholder">
+                    <input type="text" class="form-input" placeholder="Ville" id="checkoutCity" data-i18n-placeholder="checkoutCityPlaceholder">
+                </div>
+                <select class="form-input" id="checkoutCountry">
+                    <option value="FR">France</option>
+                    <option value="ES">España</option>
+                </select>
+                <input type="tel" class="form-input" placeholder="Téléphone" id="checkoutPhone" data-i18n-placeholder="checkoutPhonePlaceholder">
+            </div>
+            <button onclick="checkoutStep2()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-5 transition" data-i18n="checkoutContinue">
+                Continuer vers le paiement
+            </button>
+        </div>
+        <div class="checkout-step" id="checkoutStep2">
+            <h4 class="font-bold text-gray-900 mb-3" data-i18n="checkoutStep2Title">Informations de paiement</h4>
+            <div class="flex items-center gap-3 mb-4 text-sm text-gray-500">
+                <span><i class="fab fa-cc-visa text-2xl"></i></span>
+                <span><i class="fab fa-cc-mastercard text-2xl"></i></span>
+                <span><i class="fab fa-cc-paypal text-2xl"></i></span>
+                <span><i class="fab fa-cc-apple-pay text-2xl"></i></span>
+                <span class="ml-auto text-xs font-mono bg-gray-100 px-2 py-1 rounded">Stripe</span>
+            </div>
+            <div class="space-y-3">
+                <input type="text" class="form-input" placeholder="Numéro de carte" id="checkoutCard" maxlength="19" data-i18n-placeholder="checkoutCardPlaceholder">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" class="form-input" placeholder="MM/AA" id="checkoutExpiry" maxlength="5" data-i18n-placeholder="checkoutExpiryPlaceholder">
+                    <input type="text" class="form-input" placeholder="CVC" id="checkoutCvc" maxlength="4" data-i18n-placeholder="checkoutCvcPlaceholder">
+                </div>
+                <input type="text" class="form-input" placeholder="Nom sur la carte" id="checkoutCardName" data-i18n-placeholder="checkoutCardNamePlaceholder">
+            </div>
+            <button id="stripePaymentButton" class="stripe-btn mt-4 flex items-center justify-center gap-2" onclick="processStripePayment()">
+                <i class="fab fa-stripe text-xl"></i> <span data-i18n="payWithStripe">Payer avec Stripe</span> <span id="checkoutAmount">€0</span>
+            </button>
+            <p class="text-xs text-gray-400 text-center mt-2" data-i18n="stripeNote">Paiement sécurisé via Stripe · Vos données sont cryptées</p>
+        </div>
+        <div class="checkout-step text-center py-6" id="checkoutStep3">
+            <div class="text-5xl text-green-500 mb-4"><i class="fas fa-check-circle"></i></div>
+            <h4 class="text-xl font-black text-gray-900 mb-2" data-i18n="checkoutSuccessTitle">Commande confirmée !</h4>
+            <p class="text-gray-600 text-sm mb-4" data-i18n="checkoutSuccessText">Merci pour votre achat. Vous recevrez un email de confirmation.</p>
+            <div class="bg-gray-50 rounded-xl p-4 text-left text-sm text-gray-700 mb-4">
+                <p><strong data-i18n="orderRef">Commande #</strong> CA-<span id="orderNumber"></span></p>
+                <p><strong data-i18n="deliveryEst">Livraison estimée:</strong> <span data-i18n="deliveryTime">48-72H</span></p>
+            </div>
+            <button onclick="closeCheckout()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-xl font-bold transition" data-i18n="close">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const products = [
+    { id: 'CA-9000-SP', name: 'CoolAir PortaSplit 9000', price: 299, originalPrice: 449,
+      image: 'images/主图_03.JPEG',
+      rating: 5, reviews: 128, badge: 'Top Vente', badgeColor: 'red', energyClass: 'A++',
+      description: 'Le meilleur rapport qualité-prix pour rafraîchir votre appartement jusqu\'à 25m².',
+      specs: ['9 000 BTU','25m²','50 dB','0.8 kWh','R290','15kg'],
+      features: ['Climatisation','Déshumidification','Ventilation','Minuterie 24H','Télécommande'],
+      stock: 'En stock', imgAlt: 'Climatiseur mobile blanc design moderne' },
+    { id: 'CA-12000-SP', name: 'CoolAir PortaSplit 12000', price: 399, originalPrice: 549,
+      image: 'images/主图_04.JPEG',
+      rating: 5, reviews: 89, badge: 'Premium', badgeColor: 'amber', energyClass: 'A+++',
+      description: 'Notre modèle le plus puissant pour les grands espaces jusqu\'à 35m².',
+      specs: ['12 000 BTU','35m²','48 dB','1.0 kWh','R290','18kg'],
+      features: ['Climatisation','Déshumidification','Ventilation','WiFi intégré','Minuterie 24H','Télécommande','Mode nuit'],
+      stock: 'En stock', imgAlt: 'Climatiseur mobile haut de gamme' },
+    { id: 'CA-7000-ECO', name: 'CoolAir PortaSplit 7000 Eco', price: 199, originalPrice: 299,
+      image: 'images/主图_05.JPEG',
+      rating: 4, reviews: 54, badge: 'Éco+', badgeColor: 'green', energyClass: 'A+++',
+      description: 'L\'entrée de gamme éco-responsable pour petites surfaces.',
+      specs: ['7 000 BTU','20m²','52 dB','0.6 kWh','R290','12kg'],
+      features: ['Climatisation','Déshumidification','Minuterie 12H','Télécommande'],
+      stock: 'Précommande', imgAlt: 'Climatiseur portable écologique' },
+    { id: 'CA-10000-SP', name: 'CoolAir PortaSplit 10000', price: 349, originalPrice: 479,
+      image: 'images/主图_06.JPEG',
+      rating: 4, reviews: 72, badge: 'Nouveau', badgeColor: 'blue', energyClass: 'A++',
+      description: 'Équilibre parfait entre puissance et budget pour des pièces jusqu\'à 30m².',
+      specs: ['10 000 BTU','30m²','49 dB','0.9 kWh','R290','16kg'],
+      features: ['Climatisation','Déshumidification','Ventilation','WiFi optionnel','Minuterie 24H','Télécommande'],
+      stock: 'En stock', imgAlt: 'Climatiseur split 10000 BTU' },
+    { id: 'CA-14000-SP', name: 'CoolAir PortaSplit 14000 XL', price: 499, originalPrice: 649,
+      image: 'images/详情_01.JPEG',
+      rating: 5, reviews: 41, badge: 'Grand Espace', badgeColor: 'purple', energyClass: 'A++',
+      description: 'Pour les grands salons ou open spaces jusqu\'à 45m². Double ventilation.',
+      specs: ['14 000 BTU','45m²','52 dB','1.2 kWh','R290','22kg'],
+      features: ['Climatisation','Déshumidification','Ventilation','WiFi intégré','Minuterie 24H','Télécommande','Mode nuit','Double flux'],
+      stock: 'En stock', imgAlt: 'Climatiseur mobile grande puissance' },
+    { id: 'CA-8000-WIFI', name: 'CoolAir PortaSplit 8000 WiFi', price: 269, originalPrice: 389,
+      image: 'images/详情_02.JPEG',
+      rating: 4, reviews: 63, badge: 'Connecté', badgeColor: 'indigo', energyClass: 'A++',
+      description: 'Pilotage à distance via application. Compatible Alexa et Google Home.',
+      specs: ['8 000 BTU','22m²','51 dB','0.75 kWh','R290','14kg'],
+      features: ['Climatisation','Déshumidification','Ventilation','WiFi intégré','App smartphone','Alexa/Google','Minuterie 24H','Télécommande'],
+      stock: 'En stock', imgAlt: 'Climatiseur connecté WiFi' }
+];
+
+const accessories = [
+    { name: 'Kit Calfeutrage Fenêtre', price: 19.99, origPrice: 39.99, image: 'images/详情_03.JPEG', descKey: 'acc1Desc' },
+    { name: 'Module WiFi Intelligent', price: 29.99, origPrice: null, image: 'images/详情_04.JPEG', descKey: 'acc2Desc' }
+];
+
+const faqData = [ { qKey: 'faq1Q', aKey: 'faq1A' }, { qKey: 'faq2Q', aKey: 'faq2A' }, { qKey: 'faq3Q', aKey: 'faq3A' }, { qKey: 'faq4Q', aKey: 'faq4A' } ];
+
+const i18n = {
+    fr: {
+        title: 'CoolAir Europe | Climatiseurs Mobiles Split Sans Perçage',
+        ecoBadge: 'Réfrigérant Éco R290 & Conforme CE',
+        navHome: 'Accueil', navProducts: 'Nos Climatiseurs', navAccessories: 'Accessoires', navFaq: 'Aide/FAQ',
+        heroBadge: 'Innovation 2026 : Spécial Locataire & Copropriété',
+        heroTitle1: 'Le Frais Partout,', heroTitle2: 'Sans Aucun Perçage',
+        heroSub: 'Climatiseur mobile split haute performance. Idéal pour les appartements en France et en Espagne.',
+        heroCta1: 'Découvrir l\'Offre', heroCta2: 'Voir les Accessoires',
+        feat1Title: 'Zéro Frais d\'Installation', feat1Desc: 'Économisez jusqu\'à 1500€ d\'artisan. Installez-le vous-même en 5 minutes.',
+        feat2Title: 'Éco-Responsable', feat2Desc: 'Classe A++ avec fluide naturel R290. Fraîcheur intense pour centimes par nuit.',
+        feat3Title: 'Garantie Européenne 2 Ans', feat3Desc: 'Achat 100% sécurisé. Service client multilingue.',
+        productsTitle: 'Choisissez Votre Modèle', productsSub: 'Livraison suivie avec nos partenaires logistiques certifiés.',
+        accTitle: 'Accessoires Essentiels', accSub: 'Optimisez votre expérience de fraîcheur',
+        acc1Desc: 'Bloque 100% air chaud. Économise 40% d\'électricité. Installation 2 min.',
+        acc2Desc: 'Contrôle à distance via app. Programmation hebdomadaire. Compatible Alexa.',
+        certTitle: 'Nos Certifications & Garanties', certSub: 'Qualité européenne certifiée pour votre tranquillité',
+        cert1: 'Certifié CE', cert1Desc: 'Normes sécurité UE', cert2: 'RoHS', cert2Desc: 'Sans substances nocives',
+        cert3: 'Garantie 2 Ans', cert3Desc: 'Pièces & main d\'œuvre', cert4: 'Livraison 48H', cert4Desc: 'France & Espagne',
+        faqTitle: 'Questions Fréquentes',
+        faq1Q: 'Comment installer le climatiseur ?', faq1A: 'Aucun outil nécessaire ! Placez près d\'une fenêtre, déployez le kit de calfeutrage, branchez et allumez. 5 minutes.',
+        faq2Q: 'Quelle est la consommation électrique ?', faq2A: 'Le PortaSplit 9000 consomme environ 0.8 kWh, soit ~0.12€/h. Technologie Inverter jusqu\'à 40% d\'économie.',
+        faq3Q: 'Quels modes de paiement acceptez-vous ?', faq3A: 'CB, Visa, Mastercard, PayPal, Apple Pay, Google Pay. Paiement 100% sécurisé via Stripe. 3x sans frais.',
+        faq4Q: 'Puis-je retourner le produit ?', faq4A: 'Oui ! Retour gratuit sous 30 jours. Remboursement sous 48h. Satisfait ou remboursé.',
+        cartTitle: 'Votre Panier', cartEmpty: 'Votre panier est vide', cartSubtotal: 'Sous-total', cartShipping: 'Livraison', cartFree: 'Gratuite', cartTotal: 'Total', cartCheckout: 'Commander',
+        checkoutTitle: 'Finaliser la commande', checkoutSecure: 'Paiement 100% sécurisé',
+        checkoutStep1Title: 'Adresse de livraison', checkoutContinue: 'Continuer vers le paiement',
+        checkoutNamePlaceholder: 'Prénom & Nom', checkoutAddressPlaceholder: 'Adresse', checkoutZipPlaceholder: 'Code Postal', checkoutCityPlaceholder: 'Ville', checkoutPhonePlaceholder: 'Téléphone',
+        checkoutStep2Title: 'Informations de paiement',
+        checkoutCardPlaceholder: 'Numéro de carte', checkoutExpiryPlaceholder: 'MM/AA', checkoutCvcPlaceholder: 'CVC', checkoutCardNamePlaceholder: 'Nom sur la carte',
+        payWithStripe: 'Payer avec Stripe', stripeNote: 'Paiement sécurisé via Stripe · Vos données sont cryptées',
+        checkoutSuccessTitle: 'Commande confirmée !', checkoutSuccessText: 'Merci pour votre achat. Vous recevrez un email de confirmation avec votre numéro de suivi.',
+        orderRef: 'Commande #', deliveryEst: 'Livraison estimée:', deliveryTime: '48-72H', confirmationEmail: 'Email de confirmation:', sent: 'envoyé',
+        close: 'Fermer',
+        details: 'Détails', add: 'Ajouter', addToCart: 'Ajouter au panier - €',
+        footerCgv: 'CGV', footerPrivacy: 'Confidentialité', footerContact: 'Contact', footerLegal: 'Mentions Légales',
+        stockFrance: 'Stock France', preorder: 'Précommande', freeShipping: '48H', shipping72: '72H',
+        tabSpecs: 'Caractéristiques', tabFeatures: 'Fonctionnalités', tabReviews: 'Avis',
+        review1Name: 'Jean-Pierre M.', review1Date: 'il y a 3 jours', review1Text: 'Installation ultra simple ! Fraîcheur immédiate. Je recommande vivement.',
+        review2Name: 'María G.', review2Date: 'il y a 1 semaine', review2Text: 'Perfecto para mi piso en Barcelona. Muy silencioso.',
+        addedToCart: 'ajouté au panier'
+    },
+    es: {
+        title: 'CoolAir Europe | Aires Acondicionados Portátiles Sin Perforación',
+        ecoBadge: 'Refrigerante Ecológico R290 y Conforme CE',
+        navHome: 'Inicio', navProducts: 'Nuestros Climatizadores', navAccessories: 'Accesorios', navFaq: 'Ayuda/FAQ',
+        heroBadge: 'Innovación 2026 : Especial Inquilinos y Comunidades',
+        heroTitle1: 'Frescor en Todas Partes,', heroTitle2: 'Sin Ninguna Perforación',
+        heroSub: 'Aire acondicionado portátil split de alto rendimiento. Ideal para apartamentos en España y Francia.',
+        heroCta1: 'Descubrir la Oferta', heroCta2: 'Ver Accesorios',
+        feat1Title: 'Cero Coste de Instalación', feat1Desc: 'Ahorre hasta 1500€ de instalador. Colóquelo usted mismo en 5 minutos.',
+        feat2Title: 'Eco-Responsable', feat2Desc: 'Clase A++ con refrigerante natural R290. Frescor intenso por céntimos la noche.',
+        feat3Title: 'Garantía Europea 2 Años', feat3Desc: 'Compra 100% segura. Atención multilingüe.',
+        productsTitle: 'Elija Su Modelo', productsSub: 'Envío con seguimiento con nuestros socios logísticos certificados.',
+        accTitle: 'Accesorios Esenciales', accSub: 'Optimice su experiencia de frescor',
+        acc1Desc: 'Bloquea 100% el aire caliente. Ahorra 40% de electricidad. Instalación en 2 min.',
+        acc2Desc: 'Control remoto vía app. Programación semanal. Compatible con Alexa.',
+        certTitle: 'Nuestras Certificaciones y Garantías', certSub: 'Calidad europea certificada para su tranquilidad',
+        cert1: 'Certificado CE', cert1Desc: 'Normas de seguridad UE', cert2: 'RoHS', cert2Desc: 'Sin sustancias nocivas',
+        cert3: 'Garantía 2 Años', cert3Desc: 'Piezas y mano de obra', cert4: 'Entrega 48H', cert4Desc: 'España y Francia',
+        faqTitle: 'Preguntas Frecuentes',
+        faq1Q: '¿Cómo instalar el aire acondicionado?', faq1A: '¡Sin herramientas! Coloque la unidad cerca de una ventana, despliegue el kit de sellado, enchufe y encienda. 5 minutos.',
+        faq2Q: '¿Cuál es el consumo eléctrico?', faq2A: 'El PortaSplit 9000 consume aprox. 0.8 kWh, ~0.12€/h. Tecnología Inverter ahorra hasta 40%.',
+        faq3Q: '¿Qué métodos de pago aceptan?', faq3A: 'Tarjetas, PayPal, Apple Pay, Google Pay. Pago 100% seguro vía Stripe. 3 cuotas sin intereses.',
+        faq4Q: '¿Puedo devolver el producto?', faq4A: '¡Sí! Devolución gratuita en 30 días. Reembolso en 48h. Satisfecho o reembolsado.',
+        cartTitle: 'Su Carrito', cartEmpty: 'Su carrito está vacío', cartSubtotal: 'Subtotal', cartShipping: 'Envío', cartFree: 'Gratis', cartTotal: 'Total', cartCheckout: 'Finalizar Pedido',
+        checkoutTitle: 'Finalizar la Compra', checkoutSecure: 'Pago 100% seguro',
+        checkoutStep1Title: 'Dirección de envío', checkoutContinue: 'Continuar al pago',
+        checkoutNamePlaceholder: 'Nombre y Apellidos', checkoutAddressPlaceholder: 'Dirección', checkoutZipPlaceholder: 'Código Postal', checkoutCityPlaceholder: 'Ciudad', checkoutPhonePlaceholder: 'Teléfono',
+        checkoutStep2Title: 'Información de pago',
+        checkoutCardPlaceholder: 'Número de tarjeta', checkoutExpiryPlaceholder: 'MM/AA', checkoutCvcPlaceholder: 'CVC', checkoutCardNamePlaceholder: 'Nombre en la tarjeta',
+        payWithStripe: 'Pagar con Stripe', stripeNote: 'Pago seguro vía Stripe · Sus datos están encriptados',
+        checkoutSuccessTitle: '¡Pedido Confirmado!', checkoutSuccessText: 'Gracias por su compra. Recibirá un email de confirmación con su número de seguimiento.',
+        orderRef: 'Pedido #', deliveryEst: 'Entrega estimada:', deliveryTime: '48-72H', confirmationEmail: 'Email de confirmación:', sent: 'enviado',
+        close: 'Cerrar',
+        details: 'Detalles', add: 'Añadir', addToCart: 'Añadir al carrito - €',
+        footerCgv: 'Términos', footerPrivacy: 'Privacidad', footerContact: 'Contacto', footerLegal: 'Aviso Legal',
+        stockFrance: 'En Stock', preorder: 'Preventa', freeShipping: '48H', shipping72: '72H',
+        tabSpecs: 'Características', tabFeatures: 'Funciones', tabReviews: 'Opiniones',
+        review1Name: 'Jean-Pierre M.', review1Date: 'hace 3 días', review1Text: '¡Instalación muy sencilla! Frescor inmediato. Lo recomiendo.',
+        review2Name: 'María G.', review2Date: 'hace 1 semana', review2Text: 'Perfecto para mi piso en Barcelona. Muy silencioso.',
+        addedToCart: 'añadido al carrito'
+    }
+};
+
+let currentLang = 'fr';
+
+function switchLanguage(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    const texts = i18n[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (texts[key] !== undefined) el.textContent = texts[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (texts[key] !== undefined) el.placeholder = texts[key];
+    });
+    document.title = texts.title || 'CoolAir Europe';
+    renderProducts();
+    renderAccessories();
+    renderFAQ();
+    updateCartUI();
+}
+
+function renderProducts() {
+    const grid = document.getElementById('productGrid');
+    const lang = i18n[currentLang];
+    grid.innerHTML = products.map((p, idx) => {
+        const badgeColors = { red: 'bg-red-500', amber: 'bg-amber-500', green: 'bg-green-500', blue: 'bg-blue-500', purple: 'bg-purple-500', indigo: 'bg-indigo-500' };
+        const badgeColor = badgeColors[p.badgeColor] || 'bg-blue-500';
+        const stars = '★'.repeat(p.rating) + '☆'.repeat(5-p.rating);
+        const stockLabel = p.stock === 'En stock' ? lang.stockFrance : lang.preorder;
+        const stockClass = p.stock === 'En stock' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+        const shipLabel = p.stock === 'En stock' ? lang.freeShipping : lang.shipping72;
+        return `<div class="product-card bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 flex flex-col">
+                <div class="relative bg-gray-100">
+                    <img src="${p.image}" alt="${p.imgAlt}" class="w-full h-48 sm:h-52 object-cover" loading="lazy">
+                    <span class="absolute top-3 left-3 ${badgeColor} text-white font-bold px-2.5 py-0.5 rounded text-xs uppercase">${p.badge}</span>
+                    <span class="absolute top-3 right-4 energy-label-eu">${p.energyClass}</span>
+                </div>
+                <div class="p-4 sm:p-5 flex flex-col flex-1">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg sm:text-xl text-gray-900">${p.name}</h3>
+                        <p class="text-gray-500 text-xs mb-2">Réf: ${p.id}</p>
+                        <div class="stars text-sm mb-2">${stars} <span class="text-gray-500 text-xs font-normal">(${p.reviews} avis)</span></div>
+                        <p class="text-sm text-gray-600 mb-3">${p.specs[0]} · ${p.specs[1]} · ${p.specs[2]}</p>
+                        <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                            <span class="${stockClass} px-2 py-0.5 rounded-full">${stockLabel}</span>
+                            <span><i class="fas fa-truck text-gray-400 mr-1"></i>${shipLabel}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <div>
+                            <span class="text-lg sm:text-xl font-black text-gray-900">€${p.price}</span>
+                            ${p.originalPrice ? `<span class="text-xs text-gray-400 line-through ml-1">€${p.originalPrice}</span>` : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openProductModal(${idx})" class="text-blue-500 hover:text-blue-700 text-sm font-medium">${lang.details}</button>
+                            <button onclick="addToCart(${idx})" class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition btn-action">${lang.add}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function renderAccessories() {
+    const grid = document.getElementById('accessoryGrid');
+    const lang = i18n[currentLang];
+    grid.innerHTML = accessories.map((a, idx) => {
+        const desc = a.descKey ? lang[a.descKey] : '';
+        return `<div class="product-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col sm:flex-row">
+                <div class="sm:w-2/5 bg-gray-100">
+                    <img src="${a.image}" alt="${a.name}" class="w-full h-40 sm:h-full object-cover" loading="lazy">
+                </div>
+                <div class="p-4 sm:p-5 sm:w-3/5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-900">${a.name}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${desc}</p>
+                    </div>
+                    <div class="flex items-center justify-between mt-3">
+                        <div>
+                            <span class="text-lg font-black text-gray-900">€${a.price.toFixed(2)}</span>
+                            ${a.origPrice ? `<span class="text-xs text-gray-400 line-through ml-1">€${a.origPrice.toFixed(2)}</span>` : ''}
+                        </div>
+                        <button onclick="addAccessoryToCart(${idx})" class="bg-gray-800 hover:bg-gray-900 active:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold transition">${lang.add}</button>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function renderFAQ() {
+    const container = document.getElementById('faqContainer');
+    const lang = i18n[currentLang];
+    container.innerHTML = faqData.map(f =>
+        `<details class="bg-gray-50 rounded-xl p-4 border border-gray-100 open:ring-1 open:ring-blue-200">
+            <summary class="font-semibold text-gray-900 cursor-pointer list-none flex justify-between items-center">
+                <span>${lang[f.qKey]}</span>
+                <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+            </summary>
+            <p class="mt-3 text-gray-600 text-sm">${lang[f.aKey]}</p></details>`
+    ).join('');
+    document.querySelectorAll('#faqContainer details').forEach(d => {
+        d.addEventListener('toggle', function() {
+            const icon = this.querySelector('.fa-chevron-down');
+            icon.style.transform = this.open ? 'rotate(180deg)' : 'rotate(0deg)';
+        });
+    });
+}
+
+let cart = [];
+let checkoutStep = 1;
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function updateCartUI() {
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    document.getElementById('cartCount').textContent = count;
+    const container = document.getElementById('cartItems');
+    const footer = document.getElementById('cartFooter');
+    const empty = document.getElementById('emptyCartText');
+    const lang = i18n[currentLang];
+    if (count === 0) { empty.style.display = 'block'; footer.style.display = 'none'; return; }
+    empty.style.display = 'none'; footer.style.display = 'block';
+    let html = ''; let subtotal = 0;
+    cart.forEach((item, idx) => {
+        let img, name;
+        if (item._isAccessory) {
+            img = accessories[item.accIndex]?.image || '';
+            name = accessories[item.accIndex]?.name || '';
+        } else {
+            const p = products[item.productIndex];
+            img = p?.image || ''; name = p?.name || '';
+        }
+        const lineTotal = item.price * item.qty;
+        subtotal += lineTotal;
+        html += `<div class="cart-item">
+            <img src="${img}" alt="${name}" loading="lazy">
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 text-sm truncate">${name}</p>
+                <p class="text-blue-600 font-bold text-sm">€${item.price.toFixed(2)}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+                    <span class="font-semibold text-sm w-5 text-center">${item.qty}</span>
+                    <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+                    <button class="text-red-400 hover:text-red-600 text-xs ml-auto font-medium" onclick="removeItem(${idx})">Suppr.</button>
+                </div>
+            </div></div>`;
+    });
+    container.innerHTML = html;
+    const total = subtotal;
+    document.getElementById('cartSubtotal').textContent = `€${subtotal.toFixed(2)}`;
+    document.getElementById('cartTotal').textContent = `€${total.toFixed(2)}`;
+}
+
+function addToCart(productIndex) {
+    const p = products[productIndex];
+    if (!p) return;
+    const existing = cart.find(i => !i._isAccessory && i.productIndex === productIndex);
+    if (existing) existing.qty++;
+    else cart.push({ productIndex, price: p.price, qty: 1, _isAccessory: false });
+    updateCartUI();
+    showToast(`✅ ${p.name} ${i18n[currentLang].addedToCart}`);
+    const badge = document.getElementById('cartCount');
+    badge.style.transform = 'scale(1.3)';
+    setTimeout(() => badge.style.transform = 'scale(1)', 200);
+}
+
+function addAccessoryToCart(accIndex) {
+    const a = accessories[accIndex];
+    const existing = cart.find(i => i._isAccessory && i.accIndex === accIndex);
+    if (existing) existing.qty++;
+    else cart.push({ accIndex, price: a.price, qty: 1, _isAccessory: true });
+    updateCartUI();
+    showToast(`✅ ${a.name} ${i18n[currentLang].addedToCart}`);
+}
+
+function changeQty(idx, delta) {
+    if (!cart[idx]) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    updateCartUI();
+}
+
+function removeItem(idx) { cart.splice(idx, 1); updateCartUI(); }
+
+document.getElementById('cartButton').addEventListener('click', toggleCart);
+function toggleCart() {
+    document.getElementById('cartSidebar').classList.toggle('open');
+    document.getElementById('cartOverlay').classList.toggle('active');
+    document.body.style.overflow = document.getElementById('cartSidebar').classList.contains('open') ? 'hidden' : '';
+}
+
+function openProductModal(index) {
+    const p = products[index]; const lang = i18n[currentLang];
+    if (!p) return;
+    const starsHtml = '★'.repeat(p.rating) + '☆'.repeat(5-p.rating);
+    const badgeColors = { red: 'bg-red-500', amber: 'bg-amber-500', green: 'bg-green-500', blue: 'bg-blue-500', purple: 'bg-purple-500', indigo: 'bg-indigo-500' };
+    const badgeColor = badgeColors[p.badgeColor] || 'bg-blue-500';
+    document.getElementById('modalBody').innerHTML = `
+        <div class="flex gap-4 mb-4">
+            <img src="${p.image}" alt="${p.imgAlt}" class="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-xl flex-shrink-0" loading="lazy">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="${badgeColor} text-white text-xs font-bold px-2 py-0.5 rounded">${p.badge}</span>
+                    <span class="energy-label-eu text-[10px]">${p.energyClass}</span>
+                </div>
+                <h3 class="font-bold text-lg sm:text-xl text-gray-900">${p.name}</h3>
+                <p class="text-gray-500 text-xs">Réf: ${p.id}</p>
+                <div class="stars text-sm my-1">${starsHtml} <span class="text-gray-500 text-xs font-normal">(${p.reviews} avis)</span></div>
+                <div class="text-lg sm:text-xl font-black text-gray-900">€${p.price} ${p.originalPrice ? `<span class="text-xs text-gray-400 line-through font-normal">€${p.originalPrice}</span>` : ''}</div>
+            </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-4">${p.description}</p>
+        <div class="bg-blue-50 rounded-xl p-3 mb-4 text-sm text-blue-800">
+            <i class="fas fa-truck mr-1"></i> Livraison 48H · <i class="fas fa-undo ml-1 mr-1"></i> Retour 30 jours · <i class="fas fa-shield-alt ml-1 mr-1"></i> Garantie 2 ans
+        </div>
+        <div class="flex gap-1 border-b border-gray-200 mb-3 overflow-x-auto">
+            <div class="detail-tab active" onclick="switchTab(this, 'specs')">${lang.tabSpecs}</div>
+            <div class="detail-tab" onclick="switchTab(this, 'features')">${lang.tabFeatures}</div>
+            <div class="detail-tab" onclick="switchTab(this, 'reviews')">${lang.tabReviews}</div>
+        </div>
+        <div class="detail-panel active" id="tab-specs">
+            <ul class="grid grid-cols-2 gap-2 text-sm">${p.specs.map(s => `<li class="flex items-center gap-2"><i class="fas fa-check text-green-500 text-xs"></i>${s}</li>`).join('')}</ul>
+        </div>
+        <div class="detail-panel" id="tab-features">
+            <ul class="grid grid-cols-2 gap-2 text-sm">${p.features.map(f => `<li class="flex items-center gap-2"><i class="fas fa-check text-green-500 text-xs"></i>${f}</li>`).join('')}</ul>
+        </div>
+        <div class="detail-panel" id="tab-reviews">
+            <div class="text-sm space-y-3">
+                <div class="flex items-center gap-2"><span class="stars text-sm">★★★★★</span><span class="font-medium">${lang.review1Name}</span><span class="text-gray-400 text-xs">${lang.review1Date}</span></div>
+                <p class="text-gray-600">${lang.review1Text}</p>
+                <div class="flex items-center gap-2"><span class="stars text-sm">★★★★★</span><span class="font-medium">${lang.review2Name}</span><span class="text-gray-400 text-xs">${lang.review2Date}</span></div>
+                <p class="text-gray-600">${lang.review2Text}</p>
+            </div>
+        </div>
+        <button onclick="addToCart(${index}); closeProductModal();" class="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-3.5 rounded-xl font-bold mt-4 transition shadow-lg shadow-blue-500/30">
+            <i class="fas fa-shopping-cart mr-2"></i>${lang.addToCart}€${p.price}
+        </button>`;
+    document.getElementById('productModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeProductModal() {
+    document.getElementById('productModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function switchTab(el, tabId) {
+    document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tabId)?.classList.add('active');
+}
+
+document.getElementById('productModal').addEventListener('click', function(e) { if (e.target === this) closeProductModal(); });
+
+function startCheckout() {
+    if (cart.length === 0) return showToast(i18n[currentLang].cartEmpty);
+    document.getElementById('checkoutModal').classList.add('active');
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    document.getElementById('checkoutAmount').textContent = `€${total.toFixed(2)}`;
+    checkoutStep = 1; updateCheckoutSteps();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout() {
+    document.getElementById('checkoutModal').classList.remove('active');
+    document.body.style.overflow = '';
+    if (checkoutStep === 3) { cart = []; updateCartUI(); toggleCart(); }
+    checkoutStep = 1; updateCheckoutSteps();
+}
+
+function updateCheckoutSteps() {
+    document.querySelectorAll('.checkout-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('checkoutStep' + checkoutStep).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('step' + i + 'Dot');
+        dot.className = 'step-dot';
+        if (i < checkoutStep) dot.classList.add('done');
+        else if (i === checkoutStep) dot.classList.add('active');
+    }
+}
+
+function checkoutStep2() {
+    const name = document.getElementById('checkoutName').value.trim();
+    const addr = document.getElementById('checkoutAddress').value.trim();
+    if (!name || !addr) { showToast('Veuillez remplir les champs obligatoires'); return; }
+    checkoutStep = 2; updateCheckoutSteps();
+}
+
+function processStripePayment() {
+    const card = document.getElementById('checkoutCard').value.replace(/\s/g, '');
+    if (card.length < 13) { showToast('Numéro de carte invalide'); return; }
+    const btn = document.getElementById('stripePaymentButton');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    setTimeout(() => {
+        checkoutStep = 3; updateCheckoutSteps();
+        document.getElementById('orderNumber').textContent = Math.floor(Math.random() * 900000 + 100000);
+        showToast('✅ ' + (i18n[currentLang].checkoutSuccessTitle || 'Paiement accepté !'));
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fab fa-stripe text-xl"></i> ${i18n[currentLang].payWithStripe} €${total.toFixed(2)}`;
+    }, 1500);
+}
+
+document.getElementById('checkoutCard').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    v = v.replace(/(.{4})/g, '$1 ').trim();
+    this.value = v;
+});
+document.getElementById('checkoutExpiry').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+    this.value = v;
+});
+document.getElementById('checkoutModal').addEventListener('click', function(e) { if (e.target === this && checkoutStep !== 3) closeCheckout(); });
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        if (document.getElementById('cartSidebar').classList.contains('open')) toggleCart();
+        if (document.getElementById('productModal').classList.contains('active')) closeProductModal();
+        if (document.getElementById('checkoutModal').classList.contains('active') && checkoutStep !== 3) closeCheckout();
+    }
+});
+
+document.getElementById('menuToggle').addEventListener('click', function() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+    const icon = this.querySelector('i');
+    icon.classList.toggle('fa-bars'); icon.classList.toggle('fa-times');
+});
+function closeMobileMenu() {
+    document.getElementById('mobileMenu').classList.remove('open');
+    const icon = document.querySelector('#menuToggle i');
+    icon.classList.add('fa-bars'); icon.classList.remove('fa-times');
+}
+
+renderProducts(); renderAccessories(); renderFAQ(); updateCartUI();
+console.log('✅ CoolAir Europe v2 - 6 produits · Stripe · FR/ES · Mobile');
+</script>
+</body>
+</html>
